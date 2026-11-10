@@ -37,7 +37,37 @@ server downloads Chromium on its first run.
 Completo is a **profile bundle**: one entry in your profile's
 `dsh.profile.bundles`. Use the plugin CLI, which writes the profile for you.
 
-### From a local checkout (what was tested)
+### From a git tag (this is the release install)
+
+```sh
+dsh plugin --profile my-profile add 'github:itsnotalwin/dsh-completo#v0.1.0'
+```
+
+Pin the tag, not the branch: `main` moves, `v0.1.0` does not.
+
+Installing from git runs the `prepare` script (`node scripts/build.mjs`). pnpm
+refuses to run it until you allow that build; it prints the exact key in the
+error. Add it to your **profile's** `pnpm-workspace.yaml` (e.g.
+`~/.dsh/profiles/my-profile/pnpm-workspace.yaml`), then re-run the command:
+
+```yaml
+onlyBuiltDependencies:
+  - dsh-completo
+```
+
+Older pnpm versions call the same idea `allowBuilds: { dsh-completo: true }` —
+use whatever key the error message names. The build needs only Node: it copies
+`src/` to `dist/`, inlines the palette and the shipped summary, and validates
+the skill pack and the patch.
+
+If you would rather not allow a build at all, download the release tarball
+(`dsh-completo-0.1.0.tgz`) and add it — prebuilt, no scripts:
+
+```sh
+dsh plugin --profile my-profile add ./dsh-completo-0.1.0.tgz
+```
+
+### From a local checkout (how it was verified)
 
 ```sh
 git clone https://github.com/itsnotalwin/dsh-completo.git
@@ -52,26 +82,6 @@ There is exactly **one** Completo row on purpose: the browser module registry
 rejects two active composition sources for the same npm package, so the theme
 and the Settings page are delivered through that row's single
 `exports["./client"]` bundle instead of separate rows.
-
-### From a git ref (pinned)
-
-```sh
-dsh plugin --profile my-profile add 'github:itsnotalwin/dsh-completo#v0.1.0'
-```
-
-Installing from git runs the `prepare` script (`node scripts/build.mjs`). pnpm
-will refuse until you allow that build. When it does, it prints the exact key to
-add to your profile's `pnpm-workspace.yaml`:
-
-```yaml
-onlyBuiltDependencies:
-  - dsh-completo
-```
-
-(or `allowBuilds` with `dsh-completo: true`, depending on your pnpm version —
-use the key the error message names). The build script needs only Node; it
-copies `src/` to `dist/`, inlines the palette and the shipped summary, and
-validates the skill pack and the patch.
 
 > **npm:** the package is not published to npm yet. When it is, the same command
 > becomes `dsh plugin --profile my-profile add dsh-completo`, and it needs no
