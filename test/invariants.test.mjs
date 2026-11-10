@@ -69,6 +69,26 @@ ok(
   'the shared dictionary must be declared before the providers half merges into it',
 )
 
+// --- stylesheet injection --------------------------------------------------
+//
+// The stylesheet must be appended with `textContent = CSS` where CSS is the
+// joined string. Assigning an ARRAY to textContent renders "a,b,c" in a real
+// DOM and throws in a stricter one: the page then loses every rule silently.
+ok(
+  /tag\.textContent = CSS;?$/mu.test(client) || /\.textContent = CSS;?$/mu.test(client),
+  'the page stylesheet is not assigned as one joined string',
+)
+ok(!/textContent = CSS\.join\(/u.test(client), 'the stylesheet is assigned as an array join at the DOM edge')
+ok(/var CSS = \[/u.test(client), 'the page no longer builds its CSS from an array of rules')
+
+// --- per-row key hints -----------------------------------------------------
+//
+// Each secret row prints its own variable name in the shell hint. A single
+// String#replace rewrote only the FIRST occurrence, so every row after GitHub
+// showed "GITHUB_TOKEN" - the screenshot caught it, this keeps it caught.
+ok(!/exportHint\.replace\(/u.test(client), 'the shell hint rewrites only one occurrence of the variable name')
+ok((client.match(/exportHint\.split\("GITHUB_TOKEN"\)\.join\(secret\.ref\)/gu) ?? []).length === 1, 'the shell hint does not substitute every occurrence of the variable name')
+
 // --- the composition patch --------------------------------------------------
 const patch = read('cordis.patch.yml')
 const rowIds = [...patch.matchAll(/^\s+- id:\s*(\S+)\s*$/gmu)].map((match) => match[1])

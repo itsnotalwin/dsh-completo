@@ -22,6 +22,11 @@ jobs:
         run: node scripts/check.mjs
       - name: Test
         run: node --test test/*.test.mjs
+      - name: Rendered page matches the checked-in screenshot source
+        run: |
+          node scripts/render-page.mjs
+          git diff --exit-code -- docs/screenshots/completo-page.html \
+            || { echo "docs/screenshots/completo-page.html is stale: run node scripts/render-page.mjs and commit the result"; exit 1; }
       - name: Package contents
         run: |
           npm pack --dry-run --json --ignore-scripts > pack.json

@@ -35,10 +35,24 @@ function requireFor(id) {
   return { jsx, jsxs: jsx, Fragment: FRAGMENT };
 }
 
+function datasetKey(attribute) {
+  return attribute.replace(/^data-/u, "").replace(/-([a-z])/gu, (_, letter) => letter.toUpperCase());
+}
+
+/** A <style> stand-in that behaves like a DOM node: `dataset` AND setAttribute. */
+function styleElement() {
+  const node = { dataset: {}, textContent: "" };
+  node.setAttribute = (name, value) => {
+    node.dataset[datasetKey(name)] = String(value);
+  };
+  node.getAttribute = (name) => node.dataset[datasetKey(name)] ?? null;
+  return node;
+}
+
 globalThis.document = {
   head: { appendChild: (node) => heads.push(node) },
   querySelector: () => null,
-  createElement: () => ({ dataset: {}, textContent: "" }),
+  createElement: () => styleElement(),
 };
 globalThis.window = {
   __ModuleLoader__: {

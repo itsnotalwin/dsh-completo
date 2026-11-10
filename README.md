@@ -32,6 +32,22 @@ server downloads Chromium on its first run.
 
 ---
 
+## What it looks like
+
+![The Completo page: Settings → Plugins → Completo, showing the theme card, the nine skills, the five MCP rows with their on/off state, the providers and API-key guidance, and the write-only key slots](docs/screenshots/completo-page.png)
+
+This is the page the bundle adds under **Settings → Plugins → Completo**, rendered
+from the shipped `dist/completo-client.js` with the harness's light-theme page
+chrome. [`docs/screenshots/completo-page.html`](docs/screenshots/completo-page.html)
+is the same render as plain HTML, and
+[`docs/screenshots/`](docs/screenshots/) says how the image is regenerated.
+
+The screenshot is generated from the built bundle, not taken from a live window:
+see [Status and known limitations](#status-and-known-limitations) for what that
+does and does not prove.
+
+---
+
 ## Install
 
 Completo is a **profile bundle**: one entry in your profile's
@@ -262,6 +278,8 @@ src/client/providers.js  the Providers & API keys card + Models footer card
 src/skills/           provider shaped like the shipped dsh-skill-office plugin
 skills/<name>/SKILL.md the curriculum
 scripts/              build + contrast + browser-half checks
+scripts/render-page.mjs  renders the settings page to docs/screenshots/ for the README
+docs/screenshots/     the README image, the HTML it is rendered from, and how to regenerate it
 dist/                 built output (checked in so git installs behave; rebuilt on prepare)
 ```
 
@@ -293,9 +311,15 @@ dist/                 built output (checked in so git installs behave; rebuilt o
   "remote","remote.credentials"], apply}`. It registers both themes (14 tokens
   each), the one English dictionary (33 strings), the Settings → Plugins tab and
   the Settings → Models footer card.
+- **Page appearance is verified from the shipped bundle, not from a live window.**
+  `scripts/render-page.mjs` renders the real component with the real stylesheet to
+  `docs/screenshots/completo-page.html`, and a headless browser turns that into the
+  README image; regenerating it is how the three layout bugs it exposed were found
+  and fixed. It does not prove how the page sits inside a running Harness window
+  (live tokens, real fonts, sidebar).
 - **Not verified here:** the visual result of the theme in a running web UI (no
-  browser session was attached — the page and themes are contract-checked and
-  rendered through a React-shaped stand-in, not on screen), and a complete
+  browser session was attached — the themes are contract-checked and registered
+  through the real theme service, not seen on screen), and a complete
   model-driven conversation in a headless profile (the desktop app signs in with
   an account credential such a profile cannot use). Skill and tool calling were
   exercised directly through the harness's own execution path instead.

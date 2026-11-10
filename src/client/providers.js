@@ -145,7 +145,7 @@ function providersDefinition(React, jsx, summary) {
           busy ? t("saving") : t("save"),
         ),
       ),
-      jsx("p", { className: "cpt-needs cpt-code" }, t("envNote") + " " + secret.ref + "=<value>   " + exportHint.replace("GITHUB_TOKEN", secret.ref)),
+      jsx("p", { className: "cpt-needs cpt-code" }, t("envNote") + " " + secret.ref + "=<value>   " + exportHint.split("GITHUB_TOKEN").join(secret.ref)),
       jsx("p", { className: "cpt-needs" }, t("storedNote")),
     );
   }

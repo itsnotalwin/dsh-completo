@@ -7,6 +7,8 @@
 function pageDefinition(React, jsx, summary, providers) {
   var Fragment = React.Fragment;
   var NS = "completo.discovery";
+  // The shared dictionary: the page owns it, providers.js merges into it.
+  var en = pageDefinition.en;
 
   var CSS_TAG = "dsh-completo/CompletoPage.css";
   var CSS = [
@@ -17,6 +19,10 @@ function pageDefinition(React, jsx, summary, providers) {
     ".cpt-heading{margin:6px 0 0;font-size:13px;font-weight:600;line-height:20px;color:var(--dsw-alias-label-secondary)}",
     ".cpt-card{border:.5px solid var(--dsw-alias-settings-card-stroke,var(--dsw-alias-border-l2));background:var(--dsw-alias-settings-card-fill,var(--dsw-alias-bg-layer-2));border-radius:var(--dsw-radius-xl);padding:12px 14px;display:flex;flex-direction:column;gap:6px}",
     ".cpt-row{display:flex;align-items:baseline;gap:10px;min-width:0}",
+    ".cpt-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px;min-width:0}",
+    ".cpt-line .cpt-name{font-family:var(--dsw-font-family-code);font-size:12px}",
+    ".cpt-describe{flex:1 1 auto;min-width:0;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary)}",
+    ".cpt-row .cpt-tag{margin-left:auto}",
     ".cpt-name{font-size:14px;font-weight:500;line-height:22px;flex:none}",
     ".cpt-tag{flex:none;border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xs);padding:0 6px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary)}",
     ".cpt-focused{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary)}",
@@ -36,22 +42,19 @@ function pageDefinition(React, jsx, summary, providers) {
     var selector = "style[data-plugin-css=" + JSON.stringify(CSS_TAG) + "]";
     if (doc.querySelector(selector) !== null) return;
     var tag = doc.createElement("style");
-    tag.dataset.plugin = "dsh-completo";
-    tag.dataset.pluginCss = CSS_TAG;
+    tag.setAttribute("data-plugin", "dsh-completo");
+    tag.setAttribute("data-plugin-css", CSS_TAG);
     tag.textContent = CSS;
     doc.head.appendChild(tag);
   }
-
-  /** One dictionary per namespace. providers.js merges its keys into it. */
-  var en = pageDefinition.en;
 
   function SkillLine(props) {
     var skill = props.skill;
     return jsx(
       "div",
-      { className: "cpt-row" },
-      jsx("span", { className: "cpt-tag cpt-code" }, skill.id),
-      jsx("span", { className: "cpt-desc" }, skill.summary),
+      { className: "cpt-line" },
+      jsx("span", { className: "cpt-name" }, skill.id),
+      jsx("span", { className: "cpt-describe" }, ` ${skill.summary}`),
     );
   }
 
