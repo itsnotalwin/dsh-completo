@@ -1,0 +1,38 @@
+# NOTICE
+
+Completo is a community bundle for DeepSeek Harness. It is not affiliated with,
+endorsed by, or supported by DeepSeek. "DeepSeek" and "DeepSeek Harness" are
+used here only to say what this bundle plugs into.
+
+## What this repository contains
+
+- `src/`, `scripts/`, `cordis.patch.yml`, `icon.svg` — original work, MIT (see
+  `LICENSE`).
+- `skills/*/SKILL.md` — original prose by the Completo contributors, MIT.
+
+## Upstream work it builds on
+
+- **DeepSeek Harness** and its `@deepseek-ai/*` packages (the `skills` service,
+  `@deepseek-ai/dsh-mcp-client`, `@deepseek-ai/dsh-client-ui-theme`,
+  `@deepseek-ai/dsh-skill-office`): the provider shape in
+  `src/skills/index.js` follows the shipped `dsh-skill-office` plugin so a
+  Completo pack behaves like a bundled one. Those packages keep their own
+  licences; Completo ships none of their code.
+- **Cordis** (the plugin loader DeepSeek Harness is built on): the
+  `apply(ctx, config)` / `inject` plugin contract used throughout.
+- **Playwright MCP** (`@playwright/mcp`, Apache-2.0, Microsoft) — referenced,
+  not bundled.
+- **Chrome DevTools MCP** (`chrome-devtools-mcp`, Apache-2.0, Google) —
+  referenced, not bundled.
+- **Context7 MCP** (`@upstash/context7-mcp`, MIT, Upstash) — referenced, not
+  bundled.
+- **GitHub MCP Server** (`ghcr.io/github/github-mcp-server`, MIT, GitHub) —
+  referenced, not bundled.
+- **Postgres MCP** (`@modelcontextprotocol/server-postgres`, MIT, Anthropic) —
+  referenced, not bundled; upstream has not been released since 2024-12.
+
+## Fonts
+
+Completo does not bundle a font. The suggested text stack names Aptos and Segoe
+UI, which are Microsoft system fonts that may or may not be installed on your
+machine; Completo never redistributes them.

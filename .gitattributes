@@ -1,0 +1,6 @@
+# Everything but dist/ gets normal line-ending normalisation.
+* text=auto
+
+# dist/ is build output: keep bytes exactly as build.mjs wrote them so a git
+# checkout and an npm publish produce identical files.
+dist/** -text

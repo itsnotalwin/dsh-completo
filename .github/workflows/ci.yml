@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Build
+        run: node scripts/build.mjs
+      - name: Check
+        run: node scripts/check.mjs
+      - name: Test
+        run: node --test test/*.test.mjs
+      - name: Package contents
+        run: |
+          npm pack --dry-run --json --ignore-scripts > pack.json
+          node -e '
+            const info = require("./pack.json")[0];
+            const names = info.files.map((f) => f.path);
+            const required = [
+              "cordis.patch.yml", "dist/index.js", "dist/completo-client.js",
+              "dist/skills/index.js", "skills/spec-flow/SKILL.md",
+              "skills/ship-audit/SKILL.md", "icon.svg",
+              "LICENSE", "NOTICE", "README.md", "CHANGES.md",
+            ];
+            const missing = required.filter((p) => !names.includes(p));
+            if (missing.length) { console.error("missing from tarball:", missing); process.exit(1); }
+            console.log(`tarball: ${names.length} files, ${Math.round(info.size / 1024)} kB`);
+          '

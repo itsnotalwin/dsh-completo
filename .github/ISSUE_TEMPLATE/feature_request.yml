@@ -1,0 +1,48 @@
+name: Feature or skill idea
+description: A skill, an MCP row, or a theme change you would like in Completo.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two things that make an idea easy to accept: it needs no credential by
+        default, and it adds no runtime dependency to the bundle.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change?
+      options:
+        - New skill
+        - Change to an existing skill
+        - New MCP row
+        - Theme / colours / spacing
+        - Sidebar or page (Projects-style, plugin browsing)
+        - Docs, packaging, install
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The moment it fixes
+      description: Describe a real half-hour of vibe coding where this would have helped.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+      description: For a skill, paste a draft SKILL.md or its step list. For an MCP row, name the server, its package, and whether it needs a credential.
+  - type: dropdown
+    id: default
+    attributes:
+      label: Should it be on by default?
+      options:
+        - "No - opt-in (default for anything networked or credentialed)"
+        - "Yes - offline and safe"
+    validations:
+      required: true
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream link and licence
+      description: Required for a new MCP row or any ported text.

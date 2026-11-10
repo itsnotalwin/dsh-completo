@@ -1,0 +1,119 @@
+# Completo - composition patch.
+#
+# Every row mounts THIS package by its own name, so one npm package ships the
+# whole bundle and the Loader resolves it from the profile it was installed into.
+#
+# Two upstream rules shape the rows below:
+#
+#   1. The client-modules registry allows ONE active Loader source per package
+#      ("package X resolves from multiple active Loader sources ... remove one
+#      entry"). The browser half therefore hangs off a single row, `completo`, and
+#      its bundle registers both the theme and the Settings page.
+#   2. A patch row can be switched off without touching the others:
+#
+#          - id: completo
+#            disabled: true
+#
+# The rows are grouped in two insert blocks:
+#
+#   block 1  the package itself (theme + Settings page + skills) with its browser
+#   block 2  the MCP servers that want a key or a database
+#
+# `dsh-completo` appears exactly once, because the client registry rejects a
+# second composition source for the same package. Individual rows can still be
+# switched off by id:
+#
+#          - id: completo-mcp-playwright
+#            disabled: true
+#
+# The theme, skills and page rows are what make this a vibe-coding workspace; the
+# MCP rows are deliberately quiet. Only the Playwright browser is on: it is the
+# one server that lets the agent actually look at the app it is building, it needs
+# no credentials, and it is what makes the `live-preview` skill more than words.
+# Everything that wants a token, a database, or network access ships switched off.
+
+# --- Group 1: the browser bundle's own package ------------------------------
+# `completo` mounts THIS package by name, which is what makes the client-modules
+# registry resolve its dsh.client bundle as a single active Loader source. That
+# one bundle registers "Completo Studio" (light and dark) and the Completo page
+# in Settings -> Plugins.
+- insert:
+    # Host half: inert on purpose, the work happens in the browser bundle.
+    - id: completo
+      name: 'dsh-completo'
+
+    # MCP: browser (enabled). Playwright's own server, no credentials needed.
+    - id: completo-mcp-playwright
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: false
+      config:
+        serverName: completo-mcp-playwright
+        transport: stdio
+        command: npx
+        args:
+          - -y
+          - '@playwright/mcp@0.0.85'
+        failOnStartupError: true
+
+    # MCP: deeper browser debugging (off). Traces and network waterfalls.
+    - id: completo-mcp-chrome-devtools
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: true
+      config:
+        serverName: completo-mcp-chrome-devtools
+        transport: stdio
+        command: npx
+        args:
+          - -y
+          - 'chrome-devtools-mcp@1.12.0'
+
+# --- Group 2: MCP servers that need a key or a database ---------------------
+# These sit in a block of their own only because they are the quiet ones; the
+# skill pack is mounted by the single `completo` row above, since one package
+# may appear only once as a loader source.
+- insert:
+    # MCP: library docs (off). Context7, no key needed; an optional key raises
+    # the rate limit. Secrets come from the environment at start-up.
+    - id: completo-mcp-context7
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: true
+      config:
+        serverName: completo-mcp-context7
+        transport: stdio
+        command: npx
+        args:
+          - -y
+          - '@upstash/context7-mcp@4.6.0'
+        env:
+          CONTEXT7_API_KEY: !!js process.env.CONTEXT7_API_KEY ?? ''
+
+    # MCP: GitHub (off). Issues and pull requests; the token is never written down.
+    - id: completo-mcp-github
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: true
+      config:
+        serverName: completo-mcp-github
+        transport: stdio
+        command: docker
+        args:
+          - run
+          - -i
+          - --rm
+          - -e
+          - GITHUB_PERSONAL_ACCESS_TOKEN
+          - ghcr.io/github/github-mcp-server
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: !!js process.env.GITHUB_TOKEN ?? ''
+
+    # MCP: Postgres (off). Reads the dev database; upstream package unmaintained.
+    - id: completo-mcp-postgres
+      name: '@deepseek-ai/dsh-mcp-client'
+      disabled: true
+      config:
+        serverName: completo-mcp-postgres
+        transport: stdio
+        command: npx
+        args:
+          - -y
+          - '@modelcontextprotocol/server-postgres@0.6.2'
+          - !!js String(process.env.DATABASE_URL ?? '')

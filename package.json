@@ -1,0 +1,74 @@
+{
+  "name": "dsh-completo",
+  "version": "0.1.0",
+  "description": "A community bundle for DeepSeek Harness that turns it into a vibe-coding workspace: one warm/mint theme, a nine-skill flow-state curriculum, and a small MCP pack.",
+  "keywords": [
+    "dsh-plugin",
+    "dsh-bundle",
+    "deepseek-harness",
+    "vibe-coding",
+    "skills",
+    "mcp",
+    "theme"
+  ],
+  "license": "MIT",
+  "author": "dsh-completo contributors",
+  "type": "module",
+  "icon": "./icon.svg",
+  "homepage": "https://github.com/itsnotalwin/dsh-completo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsnotalwin/dsh-completo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itsnotalwin/dsh-completo/issues"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "NOTICE",
+    "LICENSE",
+    "CHANGES.md",
+    "skills",
+    "dist"
+  ],
+  "exports": {
+    "./client": "./dist/completo-client.js",
+    ".": "./dist/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=24",
+    "dsh": ">=0.2.2-rc.1 <0.3.0"
+  },
+  "scripts": {
+    "prepare": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test test/*.test.mjs",
+    "verify": "npm run build && npm run check && npm test"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.1.0 <5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}

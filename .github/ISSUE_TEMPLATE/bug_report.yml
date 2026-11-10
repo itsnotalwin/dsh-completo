@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in Completo does not work as the README says.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Completo is a community bundle for DeepSeek Harness and is not affiliated with DeepSeek.
+        Please do not paste tokens, API keys or private code.
+  - type: input
+    id: version
+    attributes:
+      label: Completo version
+      description: From `package.json`, or the tag you installed.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: dsh-version
+    attributes:
+      label: dsh --version
+      placeholder: 0.2.2-rc.1
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - Theme (Completo Studio)
+        - Skills (a skill does not appear / behaves oddly)
+        - MCP rows (a server will not start, tools missing)
+        - Completo page in Settings → Plugins
+        - Install / update / remove
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the exact message. For boot problems, `dsh --profile <name> --dump-config` output around the `# == dsh-completo` block helps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and Node version
+      placeholder: Windows 11, Node 24.21

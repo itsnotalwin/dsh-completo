@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: DeepSeek Harness itself
+    url: https://github.com/deepseek-ai/deepseek-harness
+    about: Problems with the harness, its plugins or its docs belong upstream. Completo is a community bundle and is not affiliated with DeepSeek.
