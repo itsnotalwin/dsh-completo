@@ -11,8 +11,12 @@
 *.yaml text eol=lf
 *.json text eol=lf
 *.svg text eol=lf
+*.html text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
+
+# The README screenshot is a binary asset; never normalise it.
+*.png binary
 
 # dist/ is build output: keep bytes exactly as build.mjs wrote them so a git
 # checkout and an npm publish produce identical files.
