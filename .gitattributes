@@ -1,6 +1,19 @@
 # Everything but dist/ gets normal line-ending normalisation.
 * text=auto
 
+# Source, docs and the patch file are authored with LF everywhere, so a Windows
+# checkout and a Linux CI checkout produce the same bytes (the patch file is
+# parsed as-is, and the build embeds source text verbatim).
+*.js text eol=lf
+*.mjs text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.svg text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
 # dist/ is build output: keep bytes exactly as build.mjs wrote them so a git
 # checkout and an npm publish produce identical files.
 dist/** -text
