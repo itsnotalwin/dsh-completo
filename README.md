@@ -268,20 +268,27 @@ dist/                 built output (checked in so git installs behave; rebuilt o
   enabling the Playwright row registers **25** `mcp__completo-mcp-playwright__*`
   tools (`browser_navigate`, `browser_click`, `browser_take_screenshot`,
   `browser_console_messages`, `browser_evaluate`, …) into the live tool set.
+- **Skill loading is verified through the model-facing tool**, not only the
+  registry: executing the `skill` tool on a live boot returns the full
+  `SKILL.md` body (2898 characters for `spec-flow`, read from
+  `skills/spec-flow/`) in about 600 ms, and an unknown name is rejected.
+- **Tool calling is verified**: `mcp__completo-mcp-playwright__browser_navigate`
+  was executed on a live boot (8273 ms) against `https://example.com` and
+  returned the real page title.
 - The browser half was verified against the harness's **real** client
   composition and module system: the registry resolves
   `dist/completo-client.js`, accepts the package (no "multiple composition
   sources" error), the composed graph lists `dsh-completo` once, and importing
-  the bundle yields `{name: "completo", inject: ["theme","slots","locale"],
-  apply}`. Applying it registers both themes (14 tokens each), the English
-  dictionary (13 strings), and the `plugins` page.
+  the bundle yields `{name: "completo", inject: ["theme","slots","locale",
+  "remote","remote.credentials"], apply}`. It registers both themes (14 tokens
+  each), the one English dictionary (33 strings), the Settings → Plugins tab and
+  the Settings → Models footer card.
 - **Not verified here:** the visual result of the theme in a running web UI (no
   browser session was attached — the page and themes are contract-checked and
-  rendered through a React-shaped stand-in, not on screen), and a model-driven
-  `skill` tool call end to end (this machine has no API key for a headless
-  profile — the desktop app signs in with an account credential a `headless`
-  profile cannot use). The skill registry and the tool registry were verified
-  directly instead.
+  rendered through a React-shaped stand-in, not on screen), and a complete
+  model-driven conversation in a headless profile (the desktop app signs in with
+  an account credential such a profile cannot use). Skill and tool calling were
+  exercised directly through the harness's own execution path instead.
 - **No Projects sidebar.** Making the sidebar read like ChatGPT/Claude projects
   is the planned v0.2.0 milestone; the harness already models workspaces as
   projects, so it is presentation work, not new storage.
