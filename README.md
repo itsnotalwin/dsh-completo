@@ -25,7 +25,7 @@ range.
 | **GitHub (MCP)** | Issues, PRs and repo reads from the conversation. Needs a token. | Off |
 | **Postgres (MCP)** | Read-only SQL against a dev database. Needs a URL. | Off |
 | **Completo page** | Settings → Plugins → *Completo*: what is installed, what is on, and how to remove it. | On |
-| **Providers & API keys card** | On that page: where a model provider and its key are added (the harness's own *Settings → Models*), plus write-only key slots for the environment variables the MCP rows read. | On |
+| **Providers & API keys card** | On that page: where a model provider and its key are added (the harness's own *Settings → Models*), and how the optional MCP rows get their environment variables. Guidance only; no key is stored by Completo. | On |
 
 Nothing is fetched at install time except the package itself. The Playwright
 server downloads Chromium on its first run.
@@ -34,7 +34,7 @@ server downloads Chromium on its first run.
 
 ## What it looks like
 
-![The Completo page: Settings → Plugins → Completo, showing the theme card, the nine skills, the five MCP rows with their on/off state, the providers and API-key guidance, and the write-only key slots](docs/screenshots/completo-page.png)
+![The Completo page: Settings → Plugins → Completo, showing the theme card, the nine skills, the five MCP rows with their on/off state, the providers and API-key guidance, and the environment variables the MCP rows read](docs/screenshots/completo-page.png)
 
 This is the page the bundle adds under **Settings → Plugins → Completo**, rendered
 from the shipped `dist/completo-client.js` with the harness's light-theme page
@@ -56,10 +56,10 @@ Completo is a **profile bundle**: one entry in your profile's
 ### From a git tag (this is the release install)
 
 ```sh
-dsh plugin --profile my-profile add 'github:itsnotalwin/dsh-completo#v0.1.0'
+dsh plugin --profile my-profile add 'github:itsnotalwin/dsh-completo#v0.1.2'
 ```
 
-Pin the tag, not the branch: `main` moves, `v0.1.0` does not.
+Pin the tag, not the branch: `main` moves, `v0.1.2` does not.
 
 Installing from git runs the `prepare` script (`node scripts/build.mjs`). pnpm
 refuses to run it until you allow that build; it prints the exact key in the
@@ -77,10 +77,10 @@ use whatever key the error message names. The build needs only Node: it copies
 the skill pack and the patch.
 
 If you would rather not allow a build at all, download the release tarball
-(`dsh-completo-0.1.0.tgz`) and add it — prebuilt, no scripts:
+(`dsh-completo-0.1.2.tgz`) and add it — prebuilt, no scripts:
 
 ```sh
-dsh plugin --profile my-profile add ./dsh-completo-0.1.0.tgz
+dsh plugin --profile my-profile add ./dsh-completo-0.1.2.tgz
 ```
 
 ### From a local checkout (how it was verified)
@@ -199,9 +199,10 @@ Tool names arrive as `mcp__completo-mcp-playwright__<tool>` and so on.
 
 ## Providers and API keys
 
-Completo does **not** keep a provider list or a key store of its own, and it never
-re-implements the model settings page. What it adds is one card that sends you to
-the place that already does this safely, plus key slots for its own MCP rows.
+Completo does **not** keep a provider list, a key store, or any input box for a
+secret. The harness already owns both, so re-implementing them would mean a second
+place for a key to live and a second thing to keep in sync. What the bundle adds is
+a card that says where that place is.
 
 ### Adding a model provider
 
@@ -209,12 +210,12 @@ The harness owns this: **Settings → Models → Add model provider → Custom m
 API**. Give it a provider id, an endpoint, a protocol (OpenAI Chat Completions,
 OpenAI Responses or Anthropic Messages) and at least one model id, then paste the
 API key. The key goes into the harness credential store and is never sent back to
-the browser; `credentials/describe` only reports *set / not set*.
+the browser.
 
-The Completo card lists those four steps, in order, so nobody has to guess where
-the key input lives. Completo keeps no second copy and shows no key value.
+The Completo card lists those four steps in order, so nobody has to hunt for where
+the key input lives. It reads nothing and stores nothing.
 
-### Keys the MCP rows read
+### Variables the MCP rows read
 
 | Variable | Used by |
 | --- | --- |
@@ -222,18 +223,27 @@ the key input lives. Completo keeps no second copy and shows no key value.
 | `GITHUB_TOKEN` | `completo-mcp-github` (passed as `GITHUB_PERSONAL_ACCESS_TOKEN`, Docker required) |
 | `DATABASE_URL` | `completo-mcp-postgres` |
 
-The card can store or clear each of these in the harness credential store, and it
-reports their state through the write-only `credentials/describe` call — the value
-never travels back to the UI.
+**There is deliberately no box to type these into, and this is the reason:** an MCP
+server is a child process. The harness strips every ambient variable matching
+`KEY|PASSWORD|SECRET|TOKEN` before spawning it, so only the row's own `env:` block
+reaches the child, and that block reads `process.env` when the row starts. A value
+typed into a plugin page is stored in the harness credential store, which the
+spawn path never reads — so a key box could accept a key and still never configure
+a server. It would only look like it worked.
 
-**Be clear about the limit:** an MCP server is a child process, and the harness
-scrubs ambient variables matching `KEY|PASSWORD|SECRET|TOKEN` before spawning it.
-Only the `env:` block in `cordis.patch.yml` reaches the child, and that block reads
-`process.env` at boot. So the reliable path is to **export the variable in the
-shell that starts the harness** (the card prints the exact line). A value saved
-from the card is kept under the same name in the credential store, which is what
-you want for the record, but it only reaches the child on a launch whose
-environment carries it.
+The path that does work is the shell:
+
+```sh
+# PowerShell
+$env:GITHUB_TOKEN = 'ghp_...'
+# POSIX
+export GITHUB_TOKEN=ghp_...
+```
+
+Then restart DeepSeek Harness and switch the row on. The card prints the exact line
+for each variable, with the server that reads it.
+
+The Playwright row — the one that ships enabled — needs no key at all.
 
 ---
 
@@ -307,10 +317,12 @@ dist/                 built output (checked in so git installs behave; rebuilt o
   composition and module system: the registry resolves
   `dist/completo-client.js`, accepts the package (no "multiple composition
   sources" error), the composed graph lists `dsh-completo` once, and importing
-  the bundle yields `{name: "completo", inject: ["theme","slots","locale",
-  "remote","remote.credentials"], apply}`. It registers both themes (14 tokens
-  each), the one English dictionary (33 strings), the Settings → Plugins tab and
-  the Settings → Models footer card.
+  the bundle yields `{name: "completo", inject: ["theme","slots","locale"],
+  apply}`. It registers both themes (14 tokens each), the one English dictionary
+  (28 strings), the Settings → Plugins tab and the Settings → Models footer card.
+- **Completo touches no credential store.** The bundle injects no `remote`
+  service, renders no password input and calls no `credentials/*` method; a gate
+  asserts all three against the built bundle.
 - **Page appearance is verified from the shipped bundle, not from a live window.**
   `scripts/render-page.mjs` renders the real component with the real stylesheet to
   `docs/screenshots/completo-page.html`, and a headless browser turns that into the

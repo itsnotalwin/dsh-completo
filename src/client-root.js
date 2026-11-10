@@ -8,8 +8,10 @@
  *   - theme half     -> registers "Completo Studio" light and dark (`theme`)
  *   - page half      -> the "Completo" page in Settings -> Plugins (`slots`,
  *                       `locale`)
- *   - providers half -> the "Providers & API keys" card inside that page, plus a
- *                       footer card on the Models page (`remote.credentials`)
+ *   - providers half -> the "Providers & API keys" guidance card inside that page,
+ *                       plus a footer card on the Models page. Guidance only: the
+ *                       harness owns providers and their secrets, so this half
+ *                       touches no credential store.
  *
  * Each half stays inert when its services are absent, so a host without a
  * renderer still loads the bundle.
@@ -47,7 +49,7 @@ __NODE_COMPLETO_PROVIDERS_PART__
     var name = "completo";
     // Every service a half needs is declared here, so apply() never probes and
     // the loader holds the bundle until this composition has them all.
-    var inject = ["theme", "slots", "locale", "remote", "remote.credentials"];
+    var inject = ["theme", "slots", "locale"];
 
     function apply(ctx) {
       var doc = GLOBAL.document === undefined ? undefined : GLOBAL.document;

@@ -87,27 +87,8 @@ const themes = [];
 const slots = [];
 const locales = [];
 const effects = [];
-const credentialCalls = [];
 const dictionaries = new Map();
 const misses = new Set();
-
-// The only service the providers half talks to. Every call answers the way the
-// harness Remote does: `{ok: true, value}` or `{ok: false, error: {message}}`.
-const credentials = {
-  describe: (refs) => {
-    credentialCalls.push({ kind: "describe", refs });
-    const value = Object.fromEntries(refs.map((ref) => [ref, { configured: ref === "GITHUB_TOKEN", source: "file", writable: true }]));
-    return Promise.resolve({ ok: true, value });
-  },
-  set: (ref, value) => {
-    credentialCalls.push({ kind: "set", ref, value });
-    return Promise.resolve({ ok: true, value: { configured: true } });
-  },
-  unset: (ref) => {
-    credentialCalls.push({ kind: "unset", ref });
-    return Promise.resolve({ ok: true, value: { configured: false } });
-  },
-};
 
 for (const definition of loaded) {
   // The factory must run with the stubs installed, as it does in a browser.
@@ -116,8 +97,15 @@ for (const definition of loaded) {
   ok(exported.name === "completo", `${definition.id} exports name "${exported.name}", expected "completo"`);
   ok(Array.isArray(exported.inject), `${label} exports no inject list`);
   ok(
-    ["theme", "slots", "locale", "remote", "remote.credentials"].every((service) => exported.inject?.includes(service)),
-    `${label} must inject theme, slots, locale and the credentials Remote (got ${JSON.stringify(exported.inject)})`,
+    ["theme", "slots", "locale"].every((service) => exported.inject?.includes(service)),
+    `${label} must inject theme, slots and locale (got ${JSON.stringify(exported.inject)})`,
+  );
+  // The harness owns providers and their secrets. Completo must not reach into
+  // the credential store: a value stored there cannot reach an MCP child, so a
+  // key box on the page would only look like it configured a server.
+  ok(
+    !(exported.inject ?? []).some((service) => String(service).startsWith("remote")),
+    `${label} injects ${JSON.stringify(exported.inject)}; Completo must not depend on the credentials Remote`,
   );
   const ctx = {
     effect: (run, description) => {
@@ -125,7 +113,6 @@ for (const definition of loaded) {
       const dispose = run();
       return typeof dispose === "function" ? dispose : () => {};
     },
-    remote: { credentials },
     theme: {
       register: (theme) => {
         themes.push(theme);
@@ -189,11 +176,12 @@ for (const definition of loaded) {
         "ship-audit",
         "Playwright browser",
         "Completo",
-        // the providers & keys surface, asserted as resolved copy - a raw key here
+        // the providers & keys guidance, asserted as resolved copy - a raw key here
         // means a half forgot to put its strings in the one registered dictionary
         "Providers & API keys",
-        "Keys the MCP servers here read",
+        "Settings -> Models",
         "Custom model API",
+        "Keys the MCP servers read",
         "GITHUB_TOKEN",
         "CONTEXT7_API_KEY",
         "DATABASE_URL",
@@ -280,21 +268,6 @@ ok(
   "the injected stylesheet is missing its data-plugin / data-plugin-css tags",
 );
 
-// --- the key surface must be write-only -----------------------------------
-ok(
-  credentialCalls.some((call) => call.kind === "describe"),
-  "the providers half never asked the credential store for its state",
-);
-ok(
-  !JSON.stringify(credentialCalls).includes("probe-value"),
-  "the providers half sent a secret somewhere unexpected",
-);
-const describeCall = credentialCalls.find((call) => call.kind === "describe");
-ok(
-  ["GITHUB_TOKEN", "CONTEXT7_API_KEY", "DATABASE_URL"].every((ref) => describeCall?.refs?.includes(ref)),
-  `the credential state call does not name every ref Completo's MCP rows read (got ${JSON.stringify(describeCall?.refs)})`,
-);
-
 if (fails.length > 0) {
   for (const fail of fails) console.error(`  - ${fail}`);
   process.exit(1);
@@ -302,5 +275,5 @@ if (fails.length > 0) {
 console.log(
   `browser bundle: ${themes.length} themes x ${Object.keys(themes[0].tokens).length} tokens, ` +
     `${pageSlots.length} settings page + ${slots.length - pageSlots.length} models footer ` +
-    `(${locales[0]?.keys ?? 0} strings), ${heads.length} stylesheet, ${credentialCalls.length} key calls, react-only requires`,
+    `(${locales[0]?.keys ?? 0} strings), ${heads.length} stylesheet, no credential access, react-only requires`,
 );

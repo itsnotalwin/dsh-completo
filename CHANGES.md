@@ -1,5 +1,34 @@
 # Changes
 
+## 0.1.2 — unreleased
+
+Removes the one part of the bundle that could not do what it looked like it did.
+
+### Changed
+
+- **The page stores no keys any more.** The three "Save to the store" boxes for
+  `GITHUB_TOKEN`, `CONTEXT7_API_KEY` and `DATABASE_URL` are gone, along with the
+  `remote` / `remote.credentials` services the bundle used to inject. The harness
+  already owns model providers and their keys (Settings → Models → *Add model
+  provider* → *Custom model API*), and a credential stored there cannot reach an
+  MCP child process: the harness strips ambient `*KEY*`/`*TOKEN*`/`*SECRET*`/
+  `*PASSWORD*` variables before spawning a server, so only the row's `env:` block
+  (read from `process.env` at launch) counts. A box that accepts a key and never
+  configures a server is worse than no box.
+- The card now documents each variable with the server that reads it and the exact
+  shell line, per platform. The Models-page footer card is unchanged.
+
+### Removed
+
+- `createSecretsController`, the password inputs, the key state tags and every
+  `credentials/*` call. The bundle is ~7 kB smaller and its inject list is just
+  `["theme", "slots", "locale"]`.
+
+### Verified
+
+- The browser gate and `test/invariants.test.mjs` now assert the absence: no
+  `remote` inject, no password input, no credential access in the built code.
+
 ## 0.1.0 — unreleased
 
 First public cut. Built and verified against DeepSeek Harness `0.2.2-rc.1`.
@@ -19,10 +48,11 @@ First public cut. Built and verified against DeepSeek Harness `0.2.2-rc.1`.
   is installed, which MCP rows are on, and how to remove the bundle.
 - **Providers & API keys card** (`src/client/providers.js`): points at the
   harness's own Settings → Models → *Add model provider* → *Custom model API*
-  flow, and reports (and can store or clear) the three environment variables
-  Completo's MCP rows read. Key state comes from the write-only credentials
-  Remote — the card never receives a value back, and the same short summary is
-  mirrored at the bottom of Settings → Models.
+  flow, and documents the three environment variables Completo's MCP rows read
+  with the exact shell line for each. It is guidance only: the harness owns model
+  providers and their keys, so Completo keeps no key store and renders no input
+  for a secret. The same short summary is mirrored at the bottom of
+  Settings → Models.
 - Dependency-free build (`scripts/build.mjs`) and three gates: the browser-bundle
   gate (`scripts/client.mjs`, runs the real bundle against a stubbed module
   loader and renders the page), `scripts/check.mjs`, and `node --test test/`.
@@ -41,12 +71,12 @@ First public cut. Built and verified against DeepSeek Harness `0.2.2-rc.1`.
   title.
 - **Composition**: the harness's real client-module registry resolves the bundle,
   the composed graph lists it exactly once, `import("dsh-completo")` yields
-  `{name: "completo", inject: ["theme","slots","locale","remote",
-  "remote.credentials"], apply}`, and applying it registers both themes, the one
-  `completo.discovery` dictionary and the Settings tab.
-- **Keys**: the credentials Remote's `describe` returns only
-  `{configured, source, writable}`; a stored value never appears in
-  `process.env` (probed on a live boot).
+  `{name: "completo", inject: ["theme","slots","locale"], apply}`, and applying it
+  registers both themes, the one `completo.discovery` dictionary and the Settings
+  tab.
+- **No credential surface**: the bundle injects no `remote` service, renders no
+  password input and calls no `credentials/*` method (asserted against the built
+  bundle by the gate and by `test/invariants.test.mjs`).
 
 ### Known limitations
 
@@ -54,11 +84,11 @@ First public cut. Built and verified against DeepSeek Harness `0.2.2-rc.1`.
   ("Switching the theme on").
 - Fonts (Aptos) are suggested, never applied or bundled — the client theme
   service exposes no font-family setter to plugins.
-- A key stored from the Completo card cannot reach an MCP server on its own: the
-  harness drops ambient `*KEY*`/`*TOKEN*`/`*SECRET*`/`*PASSWORD*` variables before
-  spawning an MCP child, so the row's `env:` block only sees `process.env` at
-  launch. Export the variable in the launching shell (the card prints the exact
-  line).
+- An MCP row's key must come from the launching shell: the harness drops ambient
+  `*KEY*`/`*TOKEN*`/`*SECRET*`/`*PASSWORD*` variables before spawning an MCP child,
+  and the credential store is not part of the spawn path, so the row's `env:` block
+  only sees `process.env` at launch. This is why the page documents the export line
+  instead of offering an input box.
 - No Projects-style sidebar (planned for 0.2.0), no plugin-browser restyling, no
   icon replacement set.
 - The theme's on-screen appearance in a running web UI has not been verified on

@@ -81,13 +81,28 @@ ok(
 ok(!/textContent = CSS\.join\(/u.test(client), 'the stylesheet is assigned as an array join at the DOM edge')
 ok(/var CSS = \[/u.test(client), 'the page no longer builds its CSS from an array of rules')
 
-// --- per-row key hints -----------------------------------------------------
+// --- providers and secrets belong to the harness ---------------------------
 //
-// Each secret row prints its own variable name in the shell hint. A single
-// String#replace rewrote only the FIRST occurrence, so every row after GitHub
-// showed "GITHUB_TOKEN" - the screenshot caught it, this keeps it caught.
-ok(!/exportHint\.replace\(/u.test(client), 'the shell hint rewrites only one occurrence of the variable name')
-ok((client.match(/exportHint\.split\("GITHUB_TOKEN"\)\.join\(secret\.ref\)/gu) ?? []).length === 1, 'the shell hint does not substitute every occurrence of the variable name')
+// The harness owns model providers AND their keys (Settings -> Models), and an
+// MCP server is a child process: the harness strips ambient
+// KEY/PASSWORD/SECRET/TOKEN variables and passes only the row's own `env:` block,
+// so a value stored in the credential store can never reach a server. Completo
+// therefore documents the env names instead of offering a box that only looks
+// like it configured something.
+// Assert against CODE only: the bundle carries explanatory comments that say
+// where secrets do NOT live, and those words must not satisfy the guard.
+const code = client
+  .replace(/\/\*[\s\S]*?\*\//gu, '')
+  .split('\n')
+  .map((line) => line.replace(/^\s*\/\/.*$/u, ''))
+  .join('\n')
+ok(!code.includes('credentials'), 'the bundle talks to the credentials Remote; the harness owns providers and their secrets')
+ok(!/\bremote\b/u.test(code), 'the bundle still references the remote surface')
+ok(!/type: "password"/u.test(code), 'the bundle still renders a password input')
+ok(!/\bunset\b/u.test(code), 'the bundle still carries credential-store plumbing')
+ok(code.includes('Settings -> Models'), 'the page no longer points at the harness Settings -> Models page')
+ok(client.includes('"GITHUB_TOKEN"') && client.includes('"CONTEXT7_API_KEY"') && client.includes('"DATABASE_URL"'), 'the page does not document every environment variable the MCP rows read')
+ok(/var shellPrefix = isWindows \? "\$env:" : "";/u.test(client), 'the shell hint is no longer per-platform')
 
 // --- the composition patch --------------------------------------------------
 const patch = read('cordis.patch.yml')

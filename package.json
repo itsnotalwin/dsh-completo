@@ -1,6 +1,6 @@
 {
   "name": "dsh-completo",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A community bundle for DeepSeek Harness that turns it into a vibe-coding workspace: one warm/mint theme, a nine-skill flow-state curriculum, and a small MCP pack.",
   "keywords": [
     "dsh-plugin",

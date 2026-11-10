@@ -59,21 +59,7 @@ const ctx = {
   effect(fn) {
     return fn()
   },
-  remote: {
-    credentials: {
-      // A representative state: one key set, two not set. The card must never
-      // show a value, only whether one exists.
-      describe() {
-        return Promise.resolve({ ok: true, value: { GITHUB_TOKEN: { configured: true, writable: true } } })
-      },
-      set() {
-        return Promise.resolve({ ok: true })
-      },
-      unset() {
-        return Promise.resolve({ ok: true })
-      },
-    },
-  },
+  // No remote/credentials stub on purpose: the bundle must not provide one.
   theme: {
     register() {
       return () => {}
