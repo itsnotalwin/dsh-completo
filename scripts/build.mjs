@@ -215,6 +215,7 @@ function build() {
     "client-root.js",
     join("client", "page.js"),
     join("client", "theme.js"),
+    join("client", "providers.js"),
     join("theme", "client.js"),
     join("discovery", "client.js"),
     join("skills", "client.js"),
@@ -236,6 +237,11 @@ function build() {
     if (!file.endsWith(".js")) continue;
     const source = read(path);
     if (source.includes("__COMPLETO_")) fail("dist/" + file + " still holds an unexpanded placeholder");
+    // dist/ is what a profile loads and what npm ships: nothing may point back at
+    // src/, and no browser half may survive as a second module.
+    if (source.includes("src/") && (file === BUNDLE || source.includes("__ModuleLoader__"))) {
+      fail("dist/" + file + " still points at src/");
+    }
     modules.push(relative(dist, path).split("\\").join("/"));
   }
 
